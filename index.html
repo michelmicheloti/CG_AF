@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Babylon.js sample code</title>
+
+    <!-- Babylon.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
+        const createScene = () => {
+
+            const scene = new BABYLON.Scene(engine);
+
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 4, 20, new BABYLON.Vector3(0, 3, -3));
+            camera.attachControl(canvas, true);
+
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
+
+            CreateTopo(scene);
+            // CreateCoroa();
+            CoroaFuro();
+            PositionPipe(scene);
+
+            vPath(0);
+            var v1 = vPath(90);
+            v1.position.x = -0.5;
+            v1.position.z = 0;
+
+            var v2 = vPath(180);
+            v2.position.z = 0.5;
+            var v3 = vPath(270);
+            v3.position.x = 0.5;
+            v3.position.z = 0;
+
+            return scene;
+        }
+
+        const CreateTopo = (scene) => {
+            var newMesh = new BABYLON.Mesh("Topo", scene);
+            const piramide = BABYLON.MeshBuilder.CreateCylinder("piramide", { diameterTop: 0, tessellation: 4, height: 0.3 });
+            newMesh.addChild(piramide);
+            const piramide2 = BABYLON.MeshBuilder.CreateCylinder("piramide2", { diameterTop: 0, tessellation: 4, height: 1, diameterTop: 1, diameterBottom: 2 });
+            piramide2.position.y = -0.5;
+            newMesh.addChild(piramide2);
+            newMesh.position.y = 1;
+            newMesh.position.x = 0;
+            newMesh.rotation.y = Math.PI / 4
+
+            return newMesh;
+        }
+
+        const vPath = (rotY) => {
+            var newMesh = new BABYLON.Mesh("Topo", scene);
+
+            var box = BABYLON.MeshBuilder.CreateBox("box1", { height: 0.5, width: 4, depth: 5 });
+            box.position.y = -2.3;
+            box.position.z = -4.5;
+
+            var box2 = BABYLON.MeshBuilder.CreateBox("box2", { height: 0.5, width: 2, depth: 1 });
+            box2.position.y = -2.2;
+            box2.position.z = -2.7;
+
+            var sourceMat = new BABYLON.StandardMaterial("sourceMat", scene);
+            sourceMat.wireframe = true;
+            sourceMat.backFaceCulling = false;
+
+            box.material = sourceMat;
+            box2.material = sourceMat;
+
+            var aCSG = BABYLON.CSG.FromMesh(box);
+            var bCSG = BABYLON.CSG.FromMesh(box2);
+
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("Coroa", scene);
+            // result.position = new BABYLON.Vector3(0, 0, 0);
+            box2.dispose();
+            box.dispose();
+
+            var box3 = BABYLON.MeshBuilder.CreateBox("box3", { height: 0.5, width: 1, depth: 5 });
+            box3.position.y = -2.2;
+            box3.position.z = -3.1;
+
+            box3.material = sourceMat;
+
+            box3.rotation.y = BABYLON.Tools.ToRadians(12);
+            box3.position.x = -0.9;
+            box3.position.z = -5;
+
+            var a = result;
+
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(box3);
+
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa", scene);
+            // result.position = new BABYLON.Vector3(0, 0, 0);
+            box3.dispose();
+            a.dispose();
+
+            var box4 = BABYLON.MeshBuilder.CreateBox("box4", { height: 0.5, width: 1, depth: 5 });
+            box4.position.y = -2.2;
+            box4.position.z = -3.1;
+
+            box4.material = sourceMat;
+
+            box4.rotation.y = BABYLON.Tools.ToRadians(-12);
+            box4.position.x = 0.9;
+            box4.position.z = -5;
+
+            var a = result;
+
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(box4);
+
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa", scene);
+            // result.position = new BABYLON.Vector3(0, 0, 0);
+            box4.dispose();
+            a.dispose();
+
+            newMesh.addChild(result);
+            newMesh.rotation.x = BABYLON.Tools.ToRadians(-15);
+            newMesh.rotation.y = BABYLON.Tools.ToRadians(rotY);
+            newMesh.position.y = 0.5;
+            newMesh.position.z = -0.5;
+
+            return newMesh;
+        }
+
+        const PositionPipe = (scene) => {
+            // 1
+            const pipe = createPipe(1, 1.1, 2, scene);
+            pipe.rotation.z = BABYLON.Tools.ToRadians(45);
+            pipe.position = new BABYLON.Vector3(1.8, -1, 0);
+
+            // Let's make it a transluscent glass pipe
+            const mat = new BABYLON.StandardMaterial("clearPipe", scene);
+            mat.diffuseColor = new BABYLON.Color3(0.5, 0.6, 0.9)
+            mat.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.2)
+            mat.alpha = 0.5
+            pipe.material = mat
+
+            //2
+            const pipe2 = createPipe(1, 1.1, 2, scene);
+            pipe2.rotation.z = BABYLON.Tools.ToRadians(135);
+            pipe2.position = new BABYLON.Vector3(-1.8, -1, 0);
+
+            mat.diffuseColor = new BABYLON.Color3(0.5, 0.6, 0.9)
+            mat.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.2)
+            mat.alpha = 0.5
+            pipe2.material = mat
+
+            //3
+            const pipe3 = createPipe(1, 1.1, 2, scene);
+            pipe3.rotation.z = BABYLON.Tools.ToRadians(45);
+            pipe3.rotation.y = BABYLON.Tools.ToRadians(90);
+            pipe3.position = new BABYLON.Vector3(0, -1, -1.8);
+
+            mat.diffuseColor = new BABYLON.Color3(0.5, 0.6, 0.9)
+            mat.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.2)
+            mat.alpha = 0.5
+            pipe3.material = mat
+
+            //4
+            const pipe4 = createPipe(1, 1.1, 2, scene);
+            pipe4.rotation.z = BABYLON.Tools.ToRadians(45);
+            pipe4.rotation.y = BABYLON.Tools.ToRadians(270);
+            pipe4.position = new BABYLON.Vector3(0, -1, 1.8);
+
+            mat.diffuseColor = new BABYLON.Color3(0.5, 0.6, 0.9)
+            mat.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.2)
+            mat.alpha = 0.5
+            pipe4.material = mat
+        }
+
+        const createPipe = (diamInner, diamOuter, length, scene) => {
+            // Create the outer wall using a Cylinder mesh
+            const mOuter = BABYLON.MeshBuilder.CreateCylinder(
+                "mOuter",
+                {
+                    diameter: diamOuter,
+                    height: length,
+                },
+                scene,
+            );
+            // Create the inner wall using a Tube mesh
+            const mInner = BABYLON.MeshBuilder.CreateTube(
+                "mInner",
+                {
+                    path: [new BABYLON.Vector3(0, -length / 2, 0), new BABYLON.Vector3(0, length / 2, 0)],
+                    radius: diamInner / 2,
+                    sideOrientation: BABYLON.Mesh.DOUBLESIDE,
+                },
+                scene,
+            );
+            // Create CSG objects from each mesh
+            const outerCSG = BABYLON.CSG.FromMesh(mOuter);
+            const innerCSG = BABYLON.CSG.FromMesh(mInner);
+            // Create a new CSG object by subtracting the inner tube from the outer cylinder
+            const pipeCSG = outerCSG.subtract(innerCSG);
+            // Create the resulting mesh from the new CSG object
+            const mPipe = pipeCSG.toMesh("mPipe", null, scene);
+            // Dispose of the meshes, no longer needed
+            mInner.dispose();
+            mOuter.dispose();
+            scene.removeMesh(mInner);
+            scene.removeMesh(mOuter);
+            // Return the result
+            return mPipe;
+        }
+
+        const CreateCoroa = () => {
+            var newMesh = new BABYLON.Mesh("Topo", scene);
+
+            var sourceMat = new BABYLON.StandardMaterial("sourceMat", scene);
+            sourceMat.wireframe = true;
+            sourceMat.backFaceCulling = false;
+
+            var box1 = BABYLON.MeshBuilder.CreateBox("box1", { height: 0.5, width: 5, depth: 5 });
+            var box2 = BABYLON.MeshBuilder.CreateBox("box2", { height: 3, width: 4, depth: 4 });
+
+            box1.material = sourceMat;
+            box2.material = sourceMat;
+            box1.isVisible = true;
+            box2.isVisible = true;
+            box2.position.y = 1.3;
+
+            var aCSG = BABYLON.CSG.FromMesh(box1);
+            var bCSG = BABYLON.CSG.FromMesh(box2);
+
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("Coroa", scene);
+            result.position = new BABYLON.Vector3(0, 0, 0);
+
+            box2.dispose();
+            box1.dispose();
+
+            return result;
+        }
+
+        const CoroaFuro = () => {
+            var box3 = BABYLON.MeshBuilder.CreateBox("box", { height: 3, width: 1, depth: 1 });
+            var box4 = BABYLON.MeshBuilder.CreateBox("box", { height: 3, width: 1, depth: 1 });
+            var box5 = BABYLON.MeshBuilder.CreateBox("box", { height: 3, width: 1, depth: 1 });
+            var box6 = BABYLON.MeshBuilder.CreateBox("box", { height: 3, width: 1, depth: 1 });
+
+            box3.position.x = 1.3;
+            box4.position.x = -1.3;
+            box5.position.x = 0;
+            box5.position.z = 1.3;
+            box6.position.x = 0;
+            box6.position.z = -1.2;
+
+            var a = CreateCoroa();
+            var aCSG = BABYLON.CSG.FromMesh(a);
+            var bCSG = BABYLON.CSG.FromMesh(box3);
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("Coroa1", scene);
+            result.position = new BABYLON.Vector3(0, 0, 0);
+            a.dispose();
+            box3.dispose();
+
+            a = result;
+
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(box4);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa1", scene);
+            result.position = new BABYLON.Vector3(0, 0, 0);
+
+            a.dispose();
+            box4.dispose();
+
+            a = result;
+
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(box5);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa1", scene);
+            result.position = new BABYLON.Vector3(0, 0, 0);
+
+            a.dispose();
+            box5.dispose();
+
+            a = result;
+
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(box6);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa1", scene);
+            result.position = new BABYLON.Vector3(0, 0, 0);
+
+            a.dispose();
+            box6.dispose();
+
+            return result
+        }
+
+        window.initFunction = async function () {
+            var asyncEngineCreation = async function () {
+                try {
+                    return createDefaultEngine();
+                } catch (e) {
+                    console.log("the available createEngine function failed. Creating the default engine instead");
+                    return createDefaultEngine();
+                }
+            }
+
+            window.engine = await asyncEngineCreation();
+            if (!engine) throw 'engine should not be null.';
+            window.scene = createScene();
+        };
+        initFunction().then(() => {
+            sceneToRender = scene
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>
