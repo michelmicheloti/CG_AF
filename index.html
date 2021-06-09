@@ -52,26 +52,16 @@
 
             const scene = new BABYLON.Scene(engine);
 
-            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 4, 20, new BABYLON.Vector3(0, 3, -3));
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 4, 30, new BABYLON.Vector3(0, -5, 0));
             camera.attachControl(canvas, true);
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
 
             CreateTopo(scene);
-            // CreateCoroa();
             CoroaFuro();
             PositionPipe(scene);
-
-            vPath(0);
-            var v1 = vPath(90);
-            v1.position.x = -0.5;
-            v1.position.z = 0;
-
-            var v2 = vPath(180);
-            v2.position.z = 0.5;
-            var v3 = vPath(270);
-            v3.position.x = 0.5;
-            v3.position.z = 0;
+            vPathPosition();
+            CreatePipeTorus(scene);
 
             return scene;
         }
@@ -88,6 +78,105 @@
             newMesh.rotation.y = Math.PI / 4
 
             return newMesh;
+        }
+
+        const CreatePipeTorus = (scene) => {
+            var newMesh = new BABYLON.Mesh("Torus", scene);
+
+            const torus1 = BABYLON.MeshBuilder.CreateTorus("torus1", { thickness: 4, diameter: 15 });
+            torus1.position.y = -6;
+
+            const torus2 = BABYLON.MeshBuilder.CreateTorus("torus2", { thickness: 3, diameter: 15 });
+            torus2.position.y = -5;
+
+            var aCSG = BABYLON.CSG.FromMesh(torus1);
+            var bCSG = BABYLON.CSG.FromMesh(torus2);
+
+            // Set up a MultiMaterial
+            var mat0 = new BABYLON.StandardMaterial("mat0", scene);
+            var mat1 = new BABYLON.StandardMaterial("mat1", scene);
+
+            mat0.diffuseColor.copyFromFloats(0, 0, 1);
+            mat0.backFaceCulling = false;
+            mat0.alpha = 0.5
+
+            mat1.diffuseColor.copyFromFloats(0, 174/255, 1);
+            mat1.backFaceCulling = false;
+            // mat1.alpha = 0.5
+
+            var multiMat = new BABYLON.MultiMaterial("multiMat", scene);
+            multiMat.subMaterials.push(mat0, mat1);
+
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("Coroa", multiMat, scene, true);
+            // result.position = new BABYLON.Vector3(0, 0, 0);
+            newMesh.addChild(result);
+
+            torus1.dispose();
+            torus2.dispose();
+
+            newMesh.addChild(CreateLadder(0,-5,-7.25,0,90,90,"ladder1"));
+            newMesh.addChild(CreateLadder(0,-5,7.25,0,90,90,"ladder2"));
+            newMesh.addChild(CreateLadder(7.25,-5,0,0,0,90,"ladder3"));
+            newMesh.addChild(CreateLadder(-7.25,-5,0,0,0,90,"ladder4"));
+
+            newMesh.position.y = -1;
+
+            // var a = result;
+            // var b = CreateHoleInTorus();
+
+            // aCSG = BABYLON.CSG.FromMesh(a);
+            // bCSG = BABYLON.CSG.FromMesh(b); 
+            // newCSG = aCSG.subtract(bCSG);
+            // result = newCSG.toMesh("Coroa1", scene);
+            // result.position = new BABYLON.Vector3(0, 0, 0);
+
+            // a.dispose();
+            // box4.dispose();
+
+            return newMesh;
+        }
+
+        const CreateHoleInTorus = () => {
+            var newMesh = new BABYLON.Mesh("Role", scene);
+            var box = BABYLON.MeshBuilder.CreateBox("box1", { height: 5, width: 3, depth: 2 });
+            box.position.x = 5;
+            box.position.y = -7;
+            box.position.z = -5.25;
+            box.rotation.y = BABYLON.Tools.ToRadians(-45);
+            newMesh.addChild(box);
+            return newMesh;
+        }
+
+        const CreateLadder = (posX, posY, posZ, rotX, rotY, rotZ, id) => {
+            var newMesh = new BABYLON.Mesh("Ladder", scene);
+
+            const capsule = BABYLON.MeshBuilder.CreateCylinder(id, {tessellation: 3, height: 2, diameter: 6});
+            capsule.position.x = posX;
+            capsule.position.y = posY;
+            capsule.position.z = posZ;
+            capsule.rotation.y = BABYLON.Tools.ToRadians(rotX);
+            capsule.rotation.y = BABYLON.Tools.ToRadians(rotY);
+            capsule.rotation.z = BABYLON.Tools.ToRadians(rotZ);
+
+            newMesh.addChild(capsule);
+
+            newMesh.position.y = 0.5;
+
+            return newMesh;
+        }
+
+        const vPathPosition = () => {
+            vPath(0);
+            var v1 = vPath(90);
+            v1.position.x = -0.5;
+            v1.position.z = 0;
+
+            var v2 = vPath(180);
+            v2.position.z = 0.5;
+            var v3 = vPath(270);
+            v3.position.x = 0.5;
+            v3.position.z = 0;
         }
 
         const vPath = (rotY) => {
