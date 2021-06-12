@@ -66,34 +66,21 @@
 
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
 
-            // // Create materials
-            // var materials = {
-            //     blue: createMat(scene, colors.blue),
-            //     red: createMat(scene, colors.red),
-            //     navy: createMat(scene, colors.navy),
-            //     green: createMat(scene, colors.green)
-            // }
-            // scene.defaultMaterial = materials.navy;
-
             const topo = CreateTopo(scene);
             const coroaFuro = CoroaFuro();
             const pipes = PositionPipe(scene);
             const vpath = vPathPosition();
             const pipeTorus = CreatePipeTorus(scene);
+            const pipeBox = PositionPipeBox(scene);
 
-            //add physics imposters to anything marbles will collide with
-            // topo.physicsImpostor = new BABYLON.PhysicsImpostor(topo, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 1 }, scene);
             coroaFuro.physicsImpostor = new BABYLON.PhysicsImpostor(coroaFuro, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
-            // pipes.physicsImpostor = new BABYLON.PhysicsImpostor(pipes, BABYLON.PhysicsImpostor.CylinderImpostor, { mass: 0, friction: 1 }, scene);
-            // vpath.physicsImpostor = new BABYLON.PhysicsImpostor(vpath, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
-            // pipeTorus.physicsImpostor = new BABYLON.PhysicsImpostor(pipeTorus, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
-
+            pipeTorus.physicsImpostor = new BABYLON.PhysicsImpostor(pipeTorus, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
 
             // Create spheres to be thrown
             var throwSpheres = [];
             var sphereIndex = 0;
             for (var i = 0; i < 10; i++) {
-                var sphere = BABYLON.Mesh.CreateSphere("", 16, 0.3, scene);
+                var sphere = BABYLON.Mesh.CreateSphere("", 16, 0.5, scene);
                 sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.2 }, scene);
                 // sphere.material = materials.blue;
                 throwSpheres.push(sphere);
@@ -131,8 +118,82 @@
             return newMesh;
         }
 
+        const PositionPipeBox = (scene) => {
+            const pipe1 = CreatePipeBox(scene);
+            pipe1.position = new BABYLON.Vector3(6.5,-9,-6.4);
+            pipe1.rotation.y = BABYLON.Tools.ToRadians(-45);
+            pipe1.rotation.x = BABYLON.Tools.ToRadians(75);
+            pipe1.physicsImpostor = new BABYLON.PhysicsImpostor(pipe1, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(pipe1.physicsImpostor);
+            pipe1.name = "pipebox1";
+
+            const pipe2 = CreatePipeBox(scene);
+            pipe2.position = new BABYLON.Vector3(-6.5,-9,6.4);
+            pipe2.rotation.y = BABYLON.Tools.ToRadians(135);
+            pipe2.rotation.x = BABYLON.Tools.ToRadians(75);
+            pipe2.physicsImpostor = new BABYLON.PhysicsImpostor(pipe2, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(pipe2.physicsImpostor);
+
+            const pipe3 = CreatePipeBox(scene);
+            pipe3.position = new BABYLON.Vector3(-6.5,-9,-6.4);
+            pipe3.rotation.y = BABYLON.Tools.ToRadians(45);
+            pipe3.rotation.x = BABYLON.Tools.ToRadians(75);
+            pipe3.physicsImpostor = new BABYLON.PhysicsImpostor(pipe3, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(pipe3.physicsImpostor);
+
+            const pipe4 = CreatePipeBox(scene);
+            pipe4.position = new BABYLON.Vector3(6.5,-9,6.4);
+            pipe4.rotation.y = BABYLON.Tools.ToRadians(-135);
+            pipe4.rotation.x = BABYLON.Tools.ToRadians(75);
+            pipe4.physicsImpostor = new BABYLON.PhysicsImpostor(pipe4, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(pipe4.physicsImpostor);
+
+            const mat = new BABYLON.StandardMaterial("clearPipe", scene);
+            mat.diffuseColor = new BABYLON.Color3(224/255, 235/255, 30/255)
+            mat.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.2)
+            mat.alpha = 0.5;
+            pipe1.material = mat;
+            pipe2.material = mat;
+            pipe3.material = mat;
+            pipe4.material = mat;
+        }
+
+        const CreatePipeBox = (scene) => {
+            var pipeBox = BABYLON.MeshBuilder.CreateBox("pipeBox", { height: 5, width: 2, depth: 1 });
+            var pipeBox2 = BABYLON.MeshBuilder.CreateBox("pipeBox2", { height: 6, width: 1.8, depth: 0.8 });
+            var aCSG = BABYLON.CSG.FromMesh(pipeBox);
+            var bCSG = BABYLON.CSG.FromMesh(pipeBox2);
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("PipeBox", null, scene);
+            // result.position = new BABYLON.Vector3(-5,0,0);
+            pipeBox.dispose();
+            pipeBox2.dispose();
+
+            var pipeBox3 = BABYLON.MeshBuilder.CreateBox("pipeBox3", { height: 1.5, width: 1.8, depth: 0.8 });
+            pipeBox3.position.y = 2;
+            pipeBox3.position.z = -0.5;
+
+            a = result;
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(pipeBox3);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("PipeBox2", null, scene);
+
+            a.dispose();
+            pipeBox3.dispose();
+
+            scene.removeMesh(pipeBox);
+            scene.removeMesh(pipeBox2);
+            scene.removeMesh(pipeBox3);
+
+            return result;
+
+            // pipeBox.position = new BABYLON.Vector3(5.5,-6,-5.25);
+            // pipeBox.rotation.y = BABYLON.Tools.ToRadians(-45);
+            // pipeBox.rotation.x = BABYLON.Tools.ToRadians(170);
+        }
+
         const CreatePipeTorus = (scene) => {
-            var newMesh = new BABYLON.Mesh("Torus", scene);
 
             const torus1 = BABYLON.MeshBuilder.CreateTorus("torus1", { thickness: 4, diameter: 15 });
             torus1.position.y = -6;
@@ -160,31 +221,63 @@
 
             var newCSG = aCSG.subtract(bCSG);
             var result = newCSG.toMesh("Coroa", multiMat, scene, true);
-            // result.position = new BABYLON.Vector3(0, 0, 0);
-            newMesh.addChild(result);
 
             torus1.dispose();
             torus2.dispose();
 
-            newMesh.addChild(CreateLadder(0, -5, -7.25, 0, 90, 90, "ladder1"));
-            newMesh.addChild(CreateLadder(0, -5, 7.25, 0, 90, 90, "ladder2"));
-            newMesh.addChild(CreateLadder(7.25, -5, 0, 0, 0, 90, "ladder3"));
-            newMesh.addChild(CreateLadder(-7.25, -5, 0, 0, 0, 90, "ladder4"));
+            var furo1 = BABYLON.MeshBuilder.CreateBox("furo1", { height: 5, width: 2, depth: 1 });
+            furo1.position = new BABYLON.Vector3(5.5,-6,-5.25);
+            furo1.rotation.y = BABYLON.Tools.ToRadians(-45);
 
-            newMesh.position.y = -1;
+            var a = result;
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(furo1);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa", multiMat, scene, true);
 
-            return newMesh;
-        }
+            a.dispose();
+            furo1.dispose();
 
-        const CreateHoleInTorus = () => {
-            var newMesh = new BABYLON.Mesh("Role", scene);
-            var box = BABYLON.MeshBuilder.CreateBox("box1", { height: 5, width: 3, depth: 2 });
-            box.position.x = 5;
-            box.position.y = -7;
-            box.position.z = -5.25;
-            box.rotation.y = BABYLON.Tools.ToRadians(-45);
-            newMesh.addChild(box);
-            return newMesh;
+            var furo2 = BABYLON.MeshBuilder.CreateBox("furo2", { height: 5, width: 2, depth: 1 });
+            furo2.position = new BABYLON.Vector3(-5.5,-6,5.25);
+            furo2.rotation.y = BABYLON.Tools.ToRadians(-45);
+
+            var a = result;
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(furo2);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa", multiMat, scene, true);
+
+            a.dispose();
+            furo2.dispose();
+
+            var furo3 = BABYLON.MeshBuilder.CreateBox("furo3", { height: 5, width: 2, depth: 1 });
+            furo3.position = new BABYLON.Vector3(5.5,-6,5.25);
+            furo3.rotation.y = BABYLON.Tools.ToRadians(45);
+
+            var a = result;
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(furo3);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa", multiMat, scene, true);
+
+            a.dispose();
+            furo3.dispose();
+
+            var furo4 = BABYLON.MeshBuilder.CreateBox("furo4", { height: 5, width: 2, depth: 1 });
+            furo4.position = new BABYLON.Vector3(-5.5,-6,-5.25);
+            furo4.rotation.y = BABYLON.Tools.ToRadians(45);
+
+            var a = result;
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(furo4);
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("Coroa", multiMat, scene, true);
+
+            a.dispose();
+            furo4.dispose();
+
+            return result;
         }
 
         const CreateLadder = (posX, posY, posZ, rotX, rotY, rotZ, id) => {
@@ -206,19 +299,44 @@
         }
 
         const vPathPosition = () => {
-            vPath(0);
-            var v1 = vPath(90);
-            v1.position.x = -0.5;
-            v1.position.z = 0;
+            const v0 = vPath();
+            v0.rotation.x = BABYLON.Tools.ToRadians(-15);
+            v0.rotation.y = BABYLON.Tools.ToRadians(0);
+            v0.position.y = -3;
+            v0.position.z = -4.5;
+            v0.physicsImpostor = new BABYLON.PhysicsImpostor(v0, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(v0.physicsImpostor);
 
-            var v2 = vPath(180);
-            v2.position.z = 0.5;
-            var v3 = vPath(270);
-            v3.position.x = 0.5;
+            const v1 = vPath();
+            v1.rotation.x = BABYLON.Tools.ToRadians(-15);
+            v1.rotation.y = BABYLON.Tools.ToRadians(180);
+            v1.position.x = 0;
+            v1.position.y = -3;
+            v1.position.z = 4.5;
+            v1.physicsImpostor = new BABYLON.PhysicsImpostor(v1, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(v1.physicsImpostor);
+
+            const v2 = vPath();            
+            v2.rotation.x = BABYLON.Tools.ToRadians(-15);
+            v2.rotation.y = BABYLON.Tools.ToRadians(90);
+            v2.position.x = -4.5;
+            v2.position.y = -3;
+            v2.position.z = 0;
+            v2.physicsImpostor = new BABYLON.PhysicsImpostor(v2, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(v2.physicsImpostor);
+
+            const v3 = vPath();
             v3.position.z = 0;
+            v3.rotation.x = BABYLON.Tools.ToRadians(-15);
+            v3.rotation.y = BABYLON.Tools.ToRadians(270);
+            v3.position.x = 4.5;
+            v3.position.y = -3;
+            v3.position.z = 0;
+            v3.physicsImpostor = new BABYLON.PhysicsImpostor(v3, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            physicsViewer.showImpostor(v3.physicsImpostor);
         }
 
-        const vPath = (rotY) => {
+        const vPath = () => {
             var newMesh = new BABYLON.Mesh("Topo", scene);
 
             var box = BABYLON.MeshBuilder.CreateBox("box1", { height: 0.5, width: 4, depth: 5 });
@@ -287,13 +405,7 @@
             box4.dispose();
             a.dispose();
 
-            newMesh.addChild(result);
-            newMesh.rotation.x = BABYLON.Tools.ToRadians(-15);
-            newMesh.rotation.y = BABYLON.Tools.ToRadians(rotY);
-            newMesh.position.y = 0.5;
-            newMesh.position.z = -0.5;
-
-            return newMesh;
+            return result;
         }
 
         const rampaPipe = (posX, posY, posZ, rotX, rotY, rotZ) => {
@@ -401,7 +513,6 @@
         }
 
         const CreateCoroa = () => {
-            var newMesh = new BABYLON.Mesh("Topo", scene);
 
             var sourceMat = new BABYLON.StandardMaterial("sourceMat", scene);
             sourceMat.wireframe = true;
@@ -425,8 +536,6 @@
 
             box2.dispose();
             box1.dispose();
-
-
 
             return result;
         }
