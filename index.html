@@ -49,7 +49,6 @@
         var sceneToRender = null;
         var physicsViewer = null;
         var physicsHelper = null;
-        var faceColors = [];
         var box = null;
 
         var helice = null;
@@ -78,28 +77,44 @@
             const pipeTorus = CreatePipeTorus(scene);
             const pipeBox = PositionPipeBox(scene);
 
+            var skybox = BABYLON.MeshBuilder.CreateBox(
+                "skybox",
+                { size: 500 },
+                scene
+            );
+            skybox.infiniteDistance = true;
+            var skyboxMaterial = new BABYLON.StandardMaterial("skybox", scene);
+            skyboxMaterial.backFaceCulling = false;
+            var files = [
+                "./textures/sky.jpg",
+                "./textures/sky.jpg",
+                "./textures/sky.jpg",
+                "./textures/sky.jpg",
+                "./textures/sky.jpg",
+                "./textures/sky.jpg",
+            ];
+            skyboxMaterial.reflectionTexture = BABYLON.CubeTexture.CreateFromImages(
+                files,
+                scene
+            );
+            skyboxMaterial.reflectionTexture.coordinatesMode =
+                BABYLON.Texture.SKYBOX_MODE;
+            skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+            skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+            skybox.material = skyboxMaterial;
+
+
             helice = BABYLON.Mesh.CreateBox("Box1", 4, scene);
-    // box1.position.x = -3;
-    helice.scaling.y = 0.15;
-    helice.scaling.z = 0.1;
-    // helice.position.y = 1;
-    var mat = new BABYLON.StandardMaterial('boxMat', scene);
-    mat.emissiveColor = new BABYLON.Color3(0, 0, 1);
-    helice.material = mat;
-    helice.physicsImpostor = new BABYLON.PhysicsImpostor(helice, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 1 }, scene);
+            // box1.position.x = -3;
+            helice.scaling.y = 0.15;
+            helice.scaling.z = 0.1;
+            // helice.position.y = 1;
+            var mat = new BABYLON.StandardMaterial('boxMat', scene);
+            mat.emissiveColor = new BABYLON.Color3(0, 0, 1);
+            helice.material = mat;
+            helice.physicsImpostor = new BABYLON.PhysicsImpostor(helice, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 1 }, scene);
 
 
-            faceColors[0] = BABYLON.Color3.Blue();
-            faceColors[1] = BABYLON.Color3.Red();
-            faceColors[2] = BABYLON.Color3.Green();
-            faceColors[3] = BABYLON.Color3.White();
-            faceColors[4] = BABYLON.Color3.Yellow();
-            faceColors[5] = BABYLON.Color3.Black();
-
-            // box = BABYLON.MeshBuilder.CreateBox("Box", { faceColors: faceColors }, scene);
-
-            // var localOrigin = localAxes(2, scene);
-            // localOrigin.parent = box;
 
             coroaFuro.physicsImpostor = new BABYLON.PhysicsImpostor(coroaFuro, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
             pipeTorus.physicsImpostor = new BABYLON.PhysicsImpostor(pipeTorus, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
@@ -118,39 +133,7 @@
 
                 spheres.push(sphere);
             }, 2500)
-            // spawnSphereInit = setInterval(()=>{
-            //     var sphere = BABYLON.Mesh.CreateSphere("", 16, 0.5, scene);
-            //     sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.2 }, scene);
-            //     // sphere.material = materials.blue;
-            //     throwSpheres.push(sphere);
 
-            //     throwSpheres[sphereIndex].position.y = 1;
-            //         throwSpheres[sphereIndex].position.x = 0;
-            //         throwSpheres[sphereIndex].position.z = 0;
-
-            //         throwSpheres[sphereIndex].physicsImpostor.setLinearVelocity(e.pickInfo.ray.direction.scale(7));
-            //         sphereIndex = ++sphereIndex % throwSpheres.length;
-            // }, 3500)
-
-            // for (var i = 0; i < 10; i++) {
-            //     var sphere = BABYLON.Mesh.CreateSphere("", 16, 0.5, scene);
-            //     sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 0.2 }, scene);
-            //     // sphere.material = materials.blue;
-            //     throwSpheres.push(sphere);
-            // }
-
-            // // On pointer event, fire a sphere
-            // scene.onPointerObservable.add((e) => {
-            //     if (e.type == BABYLON.PointerEventTypes.POINTERDOWN) {
-            //         // throwSpheres[sphereIndex].position.copyFrom(e.pickInfo.ray.origin);
-            //         throwSpheres[sphereIndex].position.y = 1;
-            //         throwSpheres[sphereIndex].position.x = 0;
-            //         throwSpheres[sphereIndex].position.z = 0;
-
-            //         throwSpheres[sphereIndex].physicsImpostor.setLinearVelocity(e.pickInfo.ray.direction.scale(7));
-            //         sphereIndex = ++sphereIndex % throwSpheres.length;
-            //     }
-            // })
 
             return scene;
         }
@@ -250,6 +233,7 @@
             // pipeBox.rotation.x = BABYLON.Tools.ToRadians(170);
         }
 
+
         const CreatePipeTorus = (scene) => {
 
             const torus1 = BABYLON.MeshBuilder.CreateTorus("torus1", { thickness: 4, diameter: 15 });
@@ -335,33 +319,6 @@
             furo4.dispose();
 
             return result;
-        }
-
-        const localAxes = (size, scene) => {
-            var pilot_local_axisX = BABYLON.Mesh.CreateLines("pilot_local_axisX", [
-                new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
-                new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
-            ], scene);
-            pilot_local_axisX.color = new BABYLON.Color3(1, 0, 0);
-            pilot_local_axisX.physicsImpostor = new BABYLON.PhysicsImpostor(pilot_local_axisX, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
-            // pilot_local_axisX.showImpostor(pilot_local_axisX.physicsImpostor);
-
-            var pilot_local_axisZ = BABYLON.Mesh.CreateLines("pilot_local_axisZ", [
-                new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
-                new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
-            ], scene);
-            pilot_local_axisZ.color = new BABYLON.Color3(0, 0, 1);
-            pilot_local_axisZ.physicsImpostor = new BABYLON.PhysicsImpostor(pilot_local_axisZ, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
-            // pilot_local_axisZ.showImpostor(pilot_local_axisZ.physicsImpostor);
-
-            var local_origin = BABYLON.MeshBuilder.CreateBox("local_origin", { size: 1 }, scene);
-            local_origin.isVisible = false;
-
-            pilot_local_axisX.parent = local_origin;
-            pilot_local_axisZ.parent = local_origin;
-
-            return local_origin;
-
         }
 
         const CreateLadder = (posX, posY, posZ, rotX, rotY, rotZ, id) => {
