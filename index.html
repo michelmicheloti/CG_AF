@@ -179,20 +179,77 @@
             scene.registerBeforeRender(function () {
                 //     //Balloon 1 intersection -- Precise = false
                 if (zoneKill.intersectsMesh(ball1, false)) {
-                    ball1.dispose();
+                    setParticules(ball1.position);
+                    scene.removeMesh(ball1);
+                    // ball1.dispose();
                 } 
                 if (zoneKill.intersectsMesh(ball2, false)) {
-                    ball2.dispose();
+                    setParticules(ball2.position);
+                    scene.removeMesh(ball1);
+                    // ball2.dispose();
                 } 
                 if (zoneKill.intersectsMesh(ball3, false)) {
-                    ball3.dispose();
+                    setParticules(ball3.position);
+                    scene.removeMesh(ball1);
+                    // ball3.dispose();
                 } 
                 if (zoneKill.intersectsMesh(ball4, false)) {
-                    ball4.dispose();
+                    setParticules(ball4.position);
+                    scene.removeMesh(ball1);
+                    // ball4.dispose();
                 } 
             });
 
             return scene;
+        }
+
+        const setParticules = function (position) {
+            var count = 0;
+            BABYLON.ParticleHelper.CreateAsync("explosion", scene).then((set) => {
+                set.systems.forEach(s => {
+                    s.emitter = new BABYLON.Vector3(position.x, position.y, position.z);
+                    s.disposeOnStop = true;
+                });
+                set.start();
+            });
+        }
+
+        const CreateParticle = (item) => {
+            var radius = 2;
+            var angle = Math.PI / 3;
+            var particleSystem = new BABYLON.ParticleSystem("particles", 2000, scene);
+
+            //Texture of each particle
+            particleSystem.particleTexture = new BABYLON.Texture("./img/flare.png", scene);
+
+            // Where the particles come from
+            particleSystem.emitter = new BABYLON.Vector3(item.posx, item.posy, item.posz);
+
+            // Colors of all particles
+            particleSystem.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 1.0);
+            particleSystem.color2 = new BABYLON.Color4(0.2, 0.5, 1.0, 1.0);
+            particleSystem.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
+
+            // Size of each particle (random between...
+            particleSystem.minSize = 0.1;
+            particleSystem.maxSize = 0.5;
+
+            // Emission rate
+            particleSystem.emitRate = 500;
+
+            /******* Emission Space ********/
+            particleSystem.createConeEmitter(radius, angle);
+
+            // Speed
+            particleSystem.minEmitPower = 2;
+            particleSystem.maxEmitPower = 4;
+            particleSystem.updateSpeed = 0.005;
+
+            particleSystem.targetStopDuration = 2;
+
+            // Start the particle system
+            particleSystem.start();
+
         }
 
         const CreateKillBall = (scene, posx, posy, posz, id) => {
