@@ -36,6 +36,7 @@
             height: 100%;
             touch-action: none;
         }
+
         .title {
             position: absolute;
         }
@@ -68,6 +69,11 @@
         var box = null;
 
         var helice = null;
+        var rod = null;
+        var rod1 = null;
+        var rod2 = null;
+        var rod3 = null;
+
 
 
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
@@ -92,6 +98,10 @@
             const vpath = vPathPosition();
             const pipeTorus = CreatePipeTorus(scene);
             const pipeBox = PositionPipeBox(scene);
+            rod = CreateRodana(scene, 8.5, -11, -8.5, -15, 135, 0);
+            rod1 = CreateRodana(scene, -8.5, -11, 8.5, -15, 135, 0);
+            rod2 = CreateRodana(scene, -8.5, -11, -8.5, -15, 45, 0);
+            rod3 = CreateRodana(scene, 8.5, -11, 8.5, -15, 45, 0);
 
             var skybox = BABYLON.MeshBuilder.CreateBox(
                 "skybox",
@@ -120,10 +130,13 @@
             skybox.material = skyboxMaterial;
 
 
-            helice = BABYLON.Mesh.CreateBox("Box1", 4, scene);
+            helice = BABYLON.Mesh.CreateBox("helice", 4, scene);
             // box1.position.x = -3;
             helice.scaling.y = 0.15;
             helice.scaling.z = 0.1;
+
+
+
             // helice.position.y = 1;
             var mat = new BABYLON.StandardMaterial('boxMat', scene);
             mat.emissiveColor = new BABYLON.Color3(0, 0, 1);
@@ -151,7 +164,34 @@
             }, 2500)
 
 
+
             return scene;
+        }
+
+
+        const CreateRodana = (scene, posx, posy, posz, rotx, roty, rotz) => {
+            var rodana = new BABYLON.Mesh("rodana1", scene);
+            var cruz = BABYLON.Mesh.CreateBox("cruz", 4, scene);
+            cruz.scaling.y = -0.15;
+            cruz.scaling.z = 0.1;
+            cruz.rotation.z = 80;
+            rodana.addChild(cruz);
+
+            var cruz2 = BABYLON.Mesh.CreateBox("cruz", 4, scene);
+            cruz2.scaling.y = -0.15;
+            cruz2.scaling.z = 0.1;
+
+            rodana.addChild(cruz2);
+
+            rodana.position = new BABYLON.Vector3(posx, posy, posz);
+            rodana.rotation.y = BABYLON.Tools.ToRadians(roty);
+            rodana.rotation.x = BABYLON.Tools.ToRadians(rotz);
+
+            cruz.physicsImpostor = new BABYLON.PhysicsImpostor(cruz, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+            cruz2.physicsImpostor = new BABYLON.PhysicsImpostor(cruz, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+
+            return rodana;
+
         }
 
         const CreateTopo = (scene) => {
@@ -329,7 +369,7 @@
             aCSG = BABYLON.CSG.FromMesh(a);
             bCSG = BABYLON.CSG.FromMesh(furo4);
             newCSG = aCSG.subtract(bCSG);
-            result = newCSG.toMesh("Coroa", multiMat, scene, true);
+            result = newCSG.toMesh("torusPrincipal", multiMat, scene, true);
 
             a.dispose();
             furo4.dispose();
@@ -675,6 +715,14 @@
             engine.runRenderLoop(function () {
                 // box.rotate(BABYLON.Axis.Y, Math.PI / 150, BABYLON.Space.LOCAL);
                 helice.rotate(BABYLON.Axis.Y, Math.PI / 150, BABYLON.Space.LOCAL);
+                rod.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
+                rod1.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
+                rod2.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
+                rod3.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
+                // cruz2.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
+                var torusPrincipal = scene.getMeshByName("torusPrincipal");
+
+                torusPrincipal.rotate(BABYLON.Axis.Y, Math.PI / 750, BABYLON.Space.LOCAL);
 
                 if (sceneToRender && sceneToRender.activeCamera) {
                     sceneToRender.render();
