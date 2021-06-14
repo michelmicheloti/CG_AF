@@ -81,7 +81,7 @@
 
             const scene = new BABYLON.Scene(engine);
 
-            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 4, 30, new BABYLON.Vector3(0, -5, 0));
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 3, Math.PI / 4, 50, new BABYLON.Vector3(0, -5, 0));
             camera.attachControl(canvas, true);
 
             scene.enablePhysics();
@@ -102,6 +102,9 @@
             rod1 = CreateRodana(scene, -8.5, -11, 8.5, -15, 135, 0);
             rod2 = CreateRodana(scene, -8.5, -11, -8.5, -15, 45, 0);
             rod3 = CreateRodana(scene, 8.5, -11, 8.5, -15, 45, 0);
+            CreatePositionFunil(scene);
+
+            const killZone = CreateKillZone(scene);
 
             var skybox = BABYLON.MeshBuilder.CreateBox(
                 "skybox",
@@ -155,13 +158,18 @@
             spheres = [];
             var posAux;
             spawnSphereInit = setInterval(() => {
-                const sphere = BABYLON.Mesh.CreateSphere(`sphere`, 16, 0.5, scene);
+                const sphere = BABYLON.Mesh.CreateSphere(`sphere`, 16, 0.6, scene);
                 sphere.position.y = 2;
 
                 sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 100, friction: .005, restitution: 0 }, scene);
 
+                const mat = new BABYLON.StandardMaterial("sphereColors", scene);
+                mat.diffuseColor = new BABYLON.Color3(1, 0, 0)
+                mat.emissiveColor = new BABYLON.Color3(0.9, 0.1, 0.1)
+                sphere.material = mat;
+
                 spheres.push(sphere);
-            }, 2500)
+            }, 1500)
 
 
 
@@ -194,6 +202,94 @@
 
         }
 
+        const CreatePositionFunil = (scene) =>{
+            var funil1 = CreateFunil(scene);
+            var funil2 = CreateFunil(scene);
+            var funil3 = CreateFunil(scene);
+            var funil4 = CreateFunil(scene);
+
+            funil1.position = new BABYLON.Vector3(9.5, -15, 9.5);
+            funil1.physicsImpostor = new BABYLON.PhysicsImpostor(funil1, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+
+            funil2.position = new BABYLON.Vector3(-9.5, -15, 9.5);
+            funil2.physicsImpostor = new BABYLON.PhysicsImpostor(funil2, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+
+            funil3.position = new BABYLON.Vector3(9.5, -15, -9.5);
+            funil3.physicsImpostor = new BABYLON.PhysicsImpostor(funil3, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+
+            funil4.position = new BABYLON.Vector3(-9.5, -15, -9.5);
+            funil4.physicsImpostor = new BABYLON.PhysicsImpostor(funil4, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
+        }
+
+        const CreateKillZone = (scene) => {
+            var box = BABYLON.MeshBuilder.CreateSphere("bacia", { diameter: 40, diameterY: 10 });
+            box.position.y = 3;
+            box.position.z = 0;
+
+            var box2 = BABYLON.MeshBuilder.CreateSphere("bacia2", { diameter: 39, diameterY: 10 });
+            box2.position.y = 4;
+            box2.position.z = 0;
+
+            var aCSG = BABYLON.CSG.FromMesh(box);
+            var bCSG = BABYLON.CSG.FromMesh(box2);
+
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("killZone",null, scene);
+            box2.dispose();
+            box.dispose();         
+
+            const mat = new BABYLON.StandardMaterial("clearPipe", scene);
+            mat.diffuseTexture = new BABYLON.Texture("./textures/aco.jpg");
+            result.material = mat;
+
+            result.physicsImpostor = new BABYLON.PhysicsImpostor(result, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 9 }, scene);
+
+            result.position.y = -20;
+
+            return result;
+        }
+        const CreateFunil = (scene) => {
+
+            var box = BABYLON.MeshBuilder.CreateBox("box1", { height: 6, width: 6, depth: 6 });
+            box.position.y = 3;
+            box.position.z = 0;
+
+            var box2 = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 6.3 });
+            box2.position.y = 4;
+            box2.position.z = 0;
+
+            var aCSG = BABYLON.CSG.FromMesh(box);
+            var bCSG = BABYLON.CSG.FromMesh(box2);
+
+            var newCSG = aCSG.subtract(bCSG);
+            var result = newCSG.toMesh("funil",null, scene);
+            // // result.position = new BABYLON.Vector3(0, 0, 0);
+            box2.dispose();
+            box.dispose();
+
+            var box3 = BABYLON.MeshBuilder.CreateBox("box3", { height: 10, width: 1, depth: 1 });
+            box3.position.y = 0;
+            box3.position.z = 0;           
+
+            var a = result;
+
+            aCSG = BABYLON.CSG.FromMesh(a);
+            bCSG = BABYLON.CSG.FromMesh(box3);
+
+            newCSG = aCSG.subtract(bCSG);
+            result = newCSG.toMesh("funilPrincipal",null, scene);
+            // result.position = new BABYLON.Vector3(0, 0, 0);
+            box3.dispose();
+            a.dispose();
+
+            const mat = new BABYLON.StandardMaterial("funilColor", scene);
+            mat.diffuseColor = new BABYLON.Color3(0.49, 0.26, 0.55)
+            mat.emissiveColor = new BABYLON.Color3(0.1, 0.1, 0.2)
+            result.material = mat;
+
+            return result;
+        }
+
         const CreateTopo = (scene) => {
             var newMesh = new BABYLON.Mesh("Topo", scene);
             const piramide = BABYLON.MeshBuilder.CreateCylinder("piramide", { diameterTop: 0, tessellation: 4, height: 0.3 });
@@ -210,6 +306,11 @@
             newMesh.position.y = 1.5;
             newMesh.position.x = 0;
             newMesh.rotation.y = Math.PI / 4
+
+            const mat = new BABYLON.StandardMaterial("mat");
+            mat.diffuseTexture = new BABYLON.Texture("./textures/pedra.jpg");
+            piramide.material = mat;
+            piramide2.material = mat;
 
             return newMesh;
         }
@@ -284,9 +385,6 @@
 
             return result;
 
-            // pipeBox.position = new BABYLON.Vector3(5.5,-6,-5.25);
-            // pipeBox.rotation.y = BABYLON.Tools.ToRadians(-45);
-            // pipeBox.rotation.x = BABYLON.Tools.ToRadians(170);
         }
 
 
@@ -502,6 +600,10 @@
             box4.dispose();
             a.dispose();
 
+            const mat = new BABYLON.StandardMaterial("mat");
+            mat.diffuseTexture = new BABYLON.Texture("./textures/a1.jpg");
+            result.material = mat;
+
             return result;
         }
 
@@ -688,6 +790,10 @@
             newCSG = aCSG.subtract(bCSG);
             result = newCSG.toMesh("Coroa1", scene);
             result.position = new BABYLON.Vector3(0, 0, 0);
+
+            const mat = new BABYLON.StandardMaterial("mat");
+            mat.diffuseTexture = new BABYLON.Texture("./textures/pedra.jpg");
+            result.material = mat;
 
             a.dispose();
             box6.dispose();
