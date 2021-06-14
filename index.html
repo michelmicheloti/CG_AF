@@ -74,6 +74,12 @@
         var rod2 = null;
         var rod3 = null;
 
+        var killBall = null;
+
+        var ball1 = null;
+        var ball2 = null;
+        var ball3 = null;
+        var ball4 = null;
 
 
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
@@ -81,7 +87,7 @@
 
             const scene = new BABYLON.Scene(engine);
 
-            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 3, Math.PI / 4, 50, new BABYLON.Vector3(0, -5, 0));
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 3, Math.PI / 4, 20, new BABYLON.Vector3(0, -5, 0));
             camera.attachControl(canvas, true);
 
             scene.enablePhysics();
@@ -132,21 +138,16 @@
             skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
             skybox.material = skyboxMaterial;
 
-
             helice = BABYLON.Mesh.CreateBox("helice", 4, scene);
             // box1.position.x = -3;
             helice.scaling.y = 0.15;
             helice.scaling.z = 0.1;
-
-
 
             // helice.position.y = 1;
             var mat = new BABYLON.StandardMaterial('boxMat', scene);
             mat.emissiveColor = new BABYLON.Color3(0, 0, 1);
             helice.material = mat;
             helice.physicsImpostor = new BABYLON.PhysicsImpostor(helice, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 1 }, scene);
-
-
 
             coroaFuro.physicsImpostor = new BABYLON.PhysicsImpostor(coroaFuro, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
             pipeTorus.physicsImpostor = new BABYLON.PhysicsImpostor(pipeTorus, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
@@ -155,25 +156,56 @@
             var throwSpheres = [];
             var sphereIndex = 0;
 
-            spheres = [];
-            var posAux;
-            spawnSphereInit = setInterval(() => {
-                const sphere = BABYLON.Mesh.CreateSphere(`sphere`, 16, 0.6, scene);
-                sphere.position.y = 2;
+            // spheres = [];
+            // var posAux;
+            // spawnSphereInit = setInterval(() => {
+            //     killBall = BABYLON.Mesh.CreateSphere(`killBall`, 16, 0.6, scene);
+            //     killBall.position.y = 2;
 
-                sphere.physicsImpostor = new BABYLON.PhysicsImpostor(sphere, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 100, friction: .005, restitution: 0 }, scene);
+            //     killBall.physicsImpostor = new BABYLON.PhysicsImpostor(killBall, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 100, friction: .005, restitution: 0 }, scene);
 
-                const mat = new BABYLON.StandardMaterial("sphereColors", scene);
-                mat.diffuseColor = new BABYLON.Color3(1, 0, 0)
-                mat.emissiveColor = new BABYLON.Color3(0.9, 0.1, 0.1)
-                sphere.material = mat;
+            //     
 
-                spheres.push(sphere);
-            }, 1500)
+            //     spheres.push(killBall);
+            // }, 5000);
 
+            ball1 = CreateKillBall(scene, 0.7, 1.5, 0, 1);
+            ball2 = CreateKillBall(scene, -0.7, 1.5, 0, 2);
+            ball3 = CreateKillBall(scene, 0, 1.5, 0.7, 3);
+            ball4 = CreateKillBall(scene, 0, 1.5, -0.7, 4);
 
+            const zoneKill = scene.getMeshByName('killZone');
+
+            scene.registerBeforeRender(function () {
+                //     //Balloon 1 intersection -- Precise = false
+                if (zoneKill.intersectsMesh(ball1, false)) {
+                    ball1.dispose();
+                } 
+                if (zoneKill.intersectsMesh(ball2, false)) {
+                    ball2.dispose();
+                } 
+                if (zoneKill.intersectsMesh(ball3, false)) {
+                    ball3.dispose();
+                } 
+                if (zoneKill.intersectsMesh(ball4, false)) {
+                    ball4.dispose();
+                } 
+            });
 
             return scene;
+        }
+
+        const CreateKillBall = (scene, posx, posy, posz, id) => {
+            killBall = BABYLON.Mesh.CreateSphere(`killBall${id}`, 16, 0.6, scene);
+            killBall.position.x = posx;
+            killBall.position.y = posy;
+            killBall.position.z = posz;
+            killBall.physicsImpostor = new BABYLON.PhysicsImpostor(killBall, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 10, friction: .5, restitution: 0 }, scene);
+            const mat = new BABYLON.StandardMaterial("sphereColors", scene);
+            mat.diffuseColor = new BABYLON.Color3(1, 0, 0)
+            mat.emissiveColor = new BABYLON.Color3(0.9, 0.1, 0.1)
+            killBall.material = mat;
+            return killBall;
         }
 
 
@@ -202,7 +234,7 @@
 
         }
 
-        const CreatePositionFunil = (scene) =>{
+        const CreatePositionFunil = (scene) => {
             var funil1 = CreateFunil(scene);
             var funil2 = CreateFunil(scene);
             var funil3 = CreateFunil(scene);
@@ -234,9 +266,11 @@
             var bCSG = BABYLON.CSG.FromMesh(box2);
 
             var newCSG = aCSG.subtract(bCSG);
-            var result = newCSG.toMesh("killZone",null, scene);
+            var result = newCSG.toMesh("killZone", null, scene);
             box2.dispose();
-            box.dispose();         
+            box.dispose();
+            scene.removeMesh(box2);
+            scene.removeMesh(box);
 
             const mat = new BABYLON.StandardMaterial("clearPipe", scene);
             mat.diffuseTexture = new BABYLON.Texture("./textures/aco.jpg");
@@ -262,14 +296,14 @@
             var bCSG = BABYLON.CSG.FromMesh(box2);
 
             var newCSG = aCSG.subtract(bCSG);
-            var result = newCSG.toMesh("funil",null, scene);
+            var result = newCSG.toMesh("funil", null, scene);
             // // result.position = new BABYLON.Vector3(0, 0, 0);
             box2.dispose();
             box.dispose();
 
             var box3 = BABYLON.MeshBuilder.CreateBox("box3", { height: 10, width: 1, depth: 1 });
             box3.position.y = 0;
-            box3.position.z = 0;           
+            box3.position.z = 0;
 
             var a = result;
 
@@ -277,10 +311,15 @@
             bCSG = BABYLON.CSG.FromMesh(box3);
 
             newCSG = aCSG.subtract(bCSG);
-            result = newCSG.toMesh("funilPrincipal",null, scene);
+            result = newCSG.toMesh("funilPrincipal", null, scene);
             // result.position = new BABYLON.Vector3(0, 0, 0);
             box3.dispose();
             a.dispose();
+
+            scene.removeMesh(box2);
+            scene.removeMesh(box);
+            scene.removeMesh(box3);
+            scene.removeMesh(a);
 
             const mat = new BABYLON.StandardMaterial("funilColor", scene);
             mat.diffuseColor = new BABYLON.Color3(0.49, 0.26, 0.55)
@@ -472,6 +511,14 @@
             a.dispose();
             furo4.dispose();
 
+            scene.removeMesh(torus1);
+            scene.removeMesh(torus2);
+            scene.removeMesh(a);
+            scene.removeMesh(furo1);
+            scene.removeMesh(furo2);
+            scene.removeMesh(furo3);
+            scene.removeMesh(furo4);
+
             return result;
         }
 
@@ -494,16 +541,16 @@
         }
 
         const vPathPosition = () => {
-            const v0 = vPath();
-            v0.rotation.x = BABYLON.Tools.ToRadians(-15);
+            const v0 = vPath(scene);
+            v0.rotation.x = BABYLON.Tools.ToRadians(-20);
             v0.rotation.y = BABYLON.Tools.ToRadians(0);
             v0.position.y = -3;
             v0.position.z = -4.5;
             v0.physicsImpostor = new BABYLON.PhysicsImpostor(v0, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
             physicsViewer.showImpostor(v0.physicsImpostor);
 
-            const v1 = vPath();
-            v1.rotation.x = BABYLON.Tools.ToRadians(-15);
+            const v1 = vPath(scene);
+            v1.rotation.x = BABYLON.Tools.ToRadians(-20);
             v1.rotation.y = BABYLON.Tools.ToRadians(180);
             v1.position.x = 0;
             v1.position.y = -3;
@@ -511,8 +558,8 @@
             v1.physicsImpostor = new BABYLON.PhysicsImpostor(v1, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
             physicsViewer.showImpostor(v1.physicsImpostor);
 
-            const v2 = vPath();
-            v2.rotation.x = BABYLON.Tools.ToRadians(-15);
+            const v2 = vPath(scene);
+            v2.rotation.x = BABYLON.Tools.ToRadians(-20);
             v2.rotation.y = BABYLON.Tools.ToRadians(90);
             v2.position.x = -4.5;
             v2.position.y = -3;
@@ -520,9 +567,9 @@
             v2.physicsImpostor = new BABYLON.PhysicsImpostor(v2, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
             physicsViewer.showImpostor(v2.physicsImpostor);
 
-            const v3 = vPath();
+            const v3 = vPath(scene);
             v3.position.z = 0;
-            v3.rotation.x = BABYLON.Tools.ToRadians(-15);
+            v3.rotation.x = BABYLON.Tools.ToRadians(-20);
             v3.rotation.y = BABYLON.Tools.ToRadians(270);
             v3.position.x = 4.5;
             v3.position.y = -3;
@@ -531,7 +578,7 @@
             physicsViewer.showImpostor(v3.physicsImpostor);
         }
 
-        const vPath = () => {
+        const vPath = (scene) => {
             var newMesh = new BABYLON.Mesh("Topo", scene);
 
             var box = BABYLON.MeshBuilder.CreateBox("box1", { height: 0.5, width: 4, depth: 5 });
@@ -820,7 +867,7 @@
             sceneToRender = scene
             engine.runRenderLoop(function () {
                 // box.rotate(BABYLON.Axis.Y, Math.PI / 150, BABYLON.Space.LOCAL);
-                helice.rotate(BABYLON.Axis.Y, Math.PI / 150, BABYLON.Space.LOCAL);
+                helice.rotate(BABYLON.Axis.Y, Math.PI / 500, BABYLON.Space.LOCAL);
                 rod.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
                 rod1.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
                 rod2.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
