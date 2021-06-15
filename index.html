@@ -69,6 +69,7 @@
         var box = null;
 
         var helice = null;
+        var helice2 = null;
         var rod = null;
         var rod1 = null;
         var rod2 = null;
@@ -81,13 +82,20 @@
         var ball3 = null;
         var ball4 = null;
 
+        var paticulasAtivas = false;
+
+        var explosied1
+        var explosied2
+        var explosied3
+        var explosied4
+
 
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
         const createScene = () => {
 
             const scene = new BABYLON.Scene(engine);
 
-            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 3, Math.PI / 4, 20, new BABYLON.Vector3(0, -5, 0));
+            const camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 3, Math.PI / 4, 50, new BABYLON.Vector3(0, -5, 0));
             camera.attachControl(canvas, true);
 
             scene.enablePhysics();
@@ -143,11 +151,18 @@
             helice.scaling.y = 0.15;
             helice.scaling.z = 0.1;
 
+            helice2 = BABYLON.Mesh.CreateBox("helice2", 16, scene);
+            // box1.position.x = -3;
+            helice2.scaling.y = 0.15;
+            helice2.scaling.z = 0.1;
+            helice2.position.y = -6;
+
             // helice.position.y = 1;
             var mat = new BABYLON.StandardMaterial('boxMat', scene);
             mat.emissiveColor = new BABYLON.Color3(0, 0, 1);
             helice.material = mat;
             helice.physicsImpostor = new BABYLON.PhysicsImpostor(helice, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 1 }, scene);
+            helice2.physicsImpostor = new BABYLON.PhysicsImpostor(helice2, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, friction: 1 }, scene);
 
             coroaFuro.physicsImpostor = new BABYLON.PhysicsImpostor(coroaFuro, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
             pipeTorus.physicsImpostor = new BABYLON.PhysicsImpostor(pipeTorus, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 }, scene);
@@ -156,19 +171,6 @@
             var throwSpheres = [];
             var sphereIndex = 0;
 
-            // spheres = [];
-            // var posAux;
-            // spawnSphereInit = setInterval(() => {
-            //     killBall = BABYLON.Mesh.CreateSphere(`killBall`, 16, 0.6, scene);
-            //     killBall.position.y = 2;
-
-            //     killBall.physicsImpostor = new BABYLON.PhysicsImpostor(killBall, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 100, friction: .005, restitution: 0 }, scene);
-
-            //     
-
-            //     spheres.push(killBall);
-            // }, 5000);
-
             ball1 = CreateKillBall(scene, 0.7, 1.5, 0, 1);
             ball2 = CreateKillBall(scene, -0.7, 1.5, 0, 2);
             ball3 = CreateKillBall(scene, 0, 1.5, 0.7, 3);
@@ -176,79 +178,113 @@
 
             const zoneKill = scene.getMeshByName('killZone');
 
-            scene.registerBeforeRender(function () {
-                //     //Balloon 1 intersection -- Precise = false
-                if (zoneKill.intersectsMesh(ball1, false)) {
-                    setParticules(ball1.position);
-                    scene.removeMesh(ball1);
-                    // ball1.dispose();
-                } 
-                if (zoneKill.intersectsMesh(ball2, false)) {
-                    setParticules(ball2.position);
-                    scene.removeMesh(ball1);
-                    // ball2.dispose();
-                } 
-                if (zoneKill.intersectsMesh(ball3, false)) {
-                    setParticules(ball3.position);
-                    scene.removeMesh(ball1);
-                    // ball3.dispose();
-                } 
-                if (zoneKill.intersectsMesh(ball4, false)) {
-                    setParticules(ball4.position);
-                    scene.removeMesh(ball1);
-                    // ball4.dispose();
-                } 
+            scene.onBeforeRenderObservable.add(() => {
+                if (!explosied1) {
+                    if (zoneKill.intersectsMesh(ball1, false)) {
+                        var a = setParticules(ball1.position.x, ball1.position.y, ball1.position.z);
+                        scene.removeMesh(ball1);
+                        explosied1 = true;
+                        ball1 = CreateKillBall(scene, 0.7, 1.5, 0, 1);
+                    }
+                }
+
+                if (!explosied2) {
+                    if (zoneKill.intersectsMesh(ball2, false)) {
+                        var a = setParticules(ball2.position.x, ball2.position.y, ball2.position.z);
+                        scene.removeMesh(ball2);
+                        explosied2 = true;
+                        ball2 = CreateKillBall(scene, -0.7, 1.5, 0, 2);
+                    }
+                }
+
+                if (!explosied3) {
+                    if (zoneKill.intersectsMesh(ball3, false)) {
+                        var a = setParticules(ball3.position.x, ball3.position.y, ball3.position.z);
+                        scene.removeMesh(ball3);
+                        explosied3 = true;
+                        ball3 = CreateKillBall(scene, 0, 1.5, 0.7, 3);
+                    }
+                }
+
+                if (!explosied4) {
+                    if (zoneKill.intersectsMesh(ball4, false)) {
+                        var a = setParticules(ball4.position.x, ball4.position.y, ball4.position.z);
+                        scene.removeMesh(ball4);
+                        explosied4 = true;
+                        ball4 = CreateKillBall(scene, 0, 1.5, -0.7, 4);
+                    }
+                }
             });
 
             return scene;
         }
 
-        const setParticules = function (position) {
-            var count = 0;
-            BABYLON.ParticleHelper.CreateAsync("explosion", scene).then((set) => {
-                set.systems.forEach(s => {
-                    s.emitter = new BABYLON.Vector3(position.x, position.y, position.z);
-                    s.disposeOnStop = true;
-                });
-                set.start();
-            });
+        const CreatePegaRetardatario = () => {
+
         }
 
-        const CreateParticle = (item) => {
-            var radius = 2;
-            var angle = Math.PI / 3;
-            var particleSystem = new BABYLON.ParticleSystem("particles", 2000, scene);
+        const setParticules = (x, y, z) => {
+            const bounce = new BABYLON.Sound("bounce", "./sounds/POP.mp3", scene,
+                null, {
+                loop: false,
+                autoplay: true
+            });
+
+            var particleSystem = new BABYLON.ParticleSystem("particles", 10, scene);
 
             //Texture of each particle
-            particleSystem.particleTexture = new BABYLON.Texture("./img/flare.png", scene);
+            particleSystem.particleTexture = new BABYLON.Texture(
+                "./textures/caveira.png",
+                scene
+            );
 
             // Where the particles come from
-            particleSystem.emitter = new BABYLON.Vector3(item.posx, item.posy, item.posz);
+            particleSystem.emitter = new BABYLON.Vector3(x, y, z); // the starting object, the emitter
+            particleSystem.minEmitBox = new BABYLON.Vector3(-0.5, 0, 0); // Starting all from
+            particleSystem.maxEmitBox = new BABYLON.Vector3(0.5, 0, 0); // To...
 
             // Colors of all particles
-            particleSystem.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 1.0);
-            particleSystem.color2 = new BABYLON.Color4(0.2, 0.5, 1.0, 1.0);
+            particleSystem.color1 = new BABYLON.Color4(1, 0.952, 0.44, 1.0);
+            particleSystem.color2 = new BABYLON.Color4(1, 0.3, 0.09, 1.0);
             particleSystem.colorDead = new BABYLON.Color4(0, 0, 0.2, 0.0);
 
-            // Size of each particle (random between...
-            particleSystem.minSize = 0.1;
-            particleSystem.maxSize = 0.5;
+            // Size of each particle random between...
+            particleSystem.minSize = 1;
+            particleSystem.maxSize = 5;
+
+            // Life time of each particle random between...
+            particleSystem.minLifeTime = 1;
+            particleSystem.maxLifeTime = 4;
 
             // Emission rate
             particleSystem.emitRate = 500;
 
-            /******* Emission Space ********/
-            particleSystem.createConeEmitter(radius, angle);
+            // Blend mode : BLENDMODE_ONEONE, or BLENDMODE_STANDARD
+            particleSystem.blendMode = BABYLON.ParticleSystem.BLENDMODE_ONEONE;
+
+            // Set the gravity of all particles
+            particleSystem.gravity = new BABYLON.Vector3(0, -9.81, 0);
+
+            // Direction of each particle after it has been emitted
+            particleSystem.direction1 = new BABYLON.Vector3(-2, 3, 2);
+            particleSystem.direction2 = new BABYLON.Vector3(2, 5, -2);
+
+            // Angular speed, in radians
+            particleSystem.minAngularSpeed = 0;
+            particleSystem.maxAngularSpeed = Math.PI;
 
             // Speed
-            particleSystem.minEmitPower = 2;
-            particleSystem.maxEmitPower = 4;
-            particleSystem.updateSpeed = 0.005;
-
-            particleSystem.targetStopDuration = 2;
+            particleSystem.minEmitPower = 1;
+            particleSystem.maxEmitPower = 3;
+            particleSystem.updateSpeed = 0.025;
 
             // Start the particle system
             particleSystem.start();
+            particleSystem.targetStopDuration = 2;
+
+
+
+            return particleSystem;
 
         }
 
@@ -262,6 +298,24 @@
             mat.diffuseColor = new BABYLON.Color3(1, 0, 0)
             mat.emissiveColor = new BABYLON.Color3(0.9, 0.1, 0.1)
             killBall.material = mat;
+
+            switch (id) {
+                case 1:
+                    explosied1 = false;
+                    break;
+                case 2:
+                    explosied2 = false;
+                    break;
+                case 3:
+                    explosied3 = false;
+                    break;
+                case 4:
+                    explosied4 = false;
+                    break;
+
+                default:
+                    break;
+            }
             return killBall;
         }
 
@@ -932,7 +986,7 @@
                 // cruz2.rotate(BABYLON.Axis.Z, Math.PI / 150, BABYLON.Space.LOCAL);
                 var torusPrincipal = scene.getMeshByName("torusPrincipal");
 
-                torusPrincipal.rotate(BABYLON.Axis.Y, Math.PI / 750, BABYLON.Space.LOCAL);
+                helice2.rotate(BABYLON.Axis.Y, Math.PI / 1500, BABYLON.Space.LOCAL);
 
                 if (sceneToRender && sceneToRender.activeCamera) {
                     sceneToRender.render();
